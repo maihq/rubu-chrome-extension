@@ -1,0 +1,18 @@
+
+body {
+	margin: 0;
+	font-family: sans-serif;
+}
+
+#share-popup {
+	width: 200px;
+	height: auto;
+	padding: 10px;
+	overflow: hidden;
+	box-sizing: border-box;
+}
+
+#share-popup p {
+	margin: 0;
+	font-size: 0.875rem;
+}
