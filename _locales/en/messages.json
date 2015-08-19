@@ -1,7 +1,27 @@
 {
-  "share_message": {
-    "message": "Page shared",
-    "description": "for when users have shared a page successfully"
+  "save_success_message": {
+    "message": "Saved: $PAGE$",
+    "description": "after the user has saved a page successfully",
+    "placeholders": {
+      "page": {
+        "content": "$1",
+        "example": "a page title"
+      }
+    }
+  },
+  "save_failed_message": {
+    "message": "Failed to share: $PAGE$",
+    "description": "after the user has failed to save a page",
+    "placeholders": {
+      "page": {
+        "content": "$1",
+        "example": "a page title"
+      }
+    }
+  },
+  "save_progress_message": {
+    "message": "Saving this page",
+    "description": "while the user is saving a page"
   },
   "app_title": {
     "message": "Save to rubu.me",
