@@ -10,14 +10,6 @@ function clearPopup (id) {
 	}
 }
 
-function setCustomMessage (id, elem) {
-	// clean up popup first
-	clearPopup(id);
-
-	// update popup
-	doc.getElementById(id).appendChild(elem);
-};
-
 function setMessage (id, msg) {
 	// clean up popup first
 	clearPopup(id);
@@ -40,9 +32,12 @@ function sharePage (tabs) {
 	}
 
 	var tab = tabs[0];
+	var text;
 
 	// active tab must contain url
 	if (!tab || !tab.url || tab.url.indexOf('http') !== 0) {
+		text = getMessage('save_abort_message');
+		setMessage(popup_id, text);
 		return;
 	}
 
@@ -51,15 +46,19 @@ function sharePage (tabs) {
 	var fetchOpts = {
 		method: 'POST'
 		, headers: {
-			'Content-Type': 'application/x-www-form-urlencoded'
+			'Accept': 'application/json'
+			, 'Content-Type': 'application/json'
 		}
-		, body: 'url=' + encodeURIComponent(tab.url) + '&title=' + tab.title
+		, body: JSON.stringify({
+			url: tab.url
+			, title: tab.title
+			, favicon: tab.favicon
+		})
 	};
 
 	fetch(fetchUrl, fetchOpts).then(function (res) {
 		// create popup message
 		var title = tab.title || 'unknown title';
-		var text;
 
 		if (!res.ok) {
 			text = getMessage('save_failed_message', [title]);

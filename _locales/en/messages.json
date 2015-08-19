@@ -1,6 +1,6 @@
 {
   "save_success_message": {
-    "message": "Saved: $PAGE$",
+    "message": "Saved: $PAGE$.",
     "description": "after the user has saved a page successfully",
     "placeholders": {
       "page": {
@@ -10,7 +10,7 @@
     }
   },
   "save_failed_message": {
-    "message": "Failed to share: $PAGE$",
+    "message": "Failed to save this page. You can report it to @bitinn on twitter.",
     "description": "after the user has failed to save a page",
     "placeholders": {
       "page": {
@@ -20,8 +20,12 @@
     }
   },
   "save_progress_message": {
-    "message": "Saving this page",
+    "message": "Saving this page...",
     "description": "while the user is saving a page"
+  },
+  "save_abort_message": {
+    "message": "Only http(s) url are supported.",
+    "description": "certain pages are not allowed"
   },
   "app_title": {
     "message": "Save to rubu.me",
