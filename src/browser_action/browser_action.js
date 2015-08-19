@@ -1,6 +1,7 @@
 
 var doc = document;
-var base_url = 'https://mai.dev/api/v1';
+var base_url = 'https://mai.dev';
+var prefix = '/api/v1';
 var popup_id = 'share-popup-message';
 
 function clearPopup (id) {
@@ -41,8 +42,8 @@ function sharePage (tabs) {
 		return;
 	}
 
-	// send to server
-	var fetchUrl = base_url + '/stash';
+	// prepare fetch request
+	var fetchUrl = base_url + prefix + '/stash';
 	var fetchOpts = {
 		method: 'POST'
 		, headers: {
@@ -75,7 +76,9 @@ function share() {
 	var text = getMessage('save_progress_message');
 	setMessage(popup_id, text);
 
-	chrome.tabs.query({ active: true, lastFocusedWindow: true }, sharePage);
+	chrome.tabs.query({ active: true, lastFocusedWindow: true }, function (tabs) {
+		sharePage(tabs);
+	});
 };
 
 doc.addEventListener('DOMContentLoaded', share);
