@@ -1,6 +1,6 @@
 {
   "save_success_message": {
-    "message": "Saved: $PAGE$.",
+    "message": "Saved: $PAGE$",
     "description": "after the user has saved a page successfully",
     "placeholders": {
       "page": {
@@ -40,7 +40,7 @@
     "description": "for when server is down"
   },
   "save_invalid_json_message": {
-    "message": "Remote server returned invalid json. You can report it to @bitinn on twitter.",
+    "message": "Remote server returned invalid json.",
     "description": "for when server is returning non-json response, usually means server error"
   },
   "options_token": {
@@ -60,7 +60,7 @@
     "description": "app title"
   },
   "app_description": {
-    "message": "Save your current url to rubu.me, for viewing or sharing later",
+    "message": "Save your current url to rubu.me, for bookmarking or sharing.",
     "description": "app description"
   }
 }
