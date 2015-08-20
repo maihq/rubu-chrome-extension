@@ -1,7 +1,8 @@
 
 var doc = document;
 var base_url = 'https://mai.dev';
-var prefix = '/api/v1';
+var api_prefix = '/api/v1';
+var api_route = '/stash/extension'
 var popup_id = 'share-popup-message';
 
 function clearPopup (id) {
@@ -26,7 +27,7 @@ function getMessage (name, data) {
 	return chrome.i18n.getMessage(name, data);
 };
 
-function sharePage (tabs) {
+function sharePage (tabs, items) {
 	// must have an active tab
 	if (tabs.length === 0) {
 		return;
@@ -42,8 +43,23 @@ function sharePage (tabs) {
 		return;
 	}
 
+	// user data
+	if (!items.token) {
+		text = getMessage('save_settings_message');
+		setMessage(popup_id, text);
+		return;
+	}
+
+	var token = items.token.split(':');
+
+	if (token.length !== 3) {
+		text = getMessage('save_invalid_token_message');
+		setMessage(popup_id, text);
+		return;
+	}
+
 	// prepare fetch request
-	var fetchUrl = base_url + prefix + '/stash';
+	var fetchUrl = base_url + api_prefix + api_route;
 	var fetchOpts = {
 		method: 'POST'
 		, headers: {
@@ -53,21 +69,39 @@ function sharePage (tabs) {
 		, body: JSON.stringify({
 			url: tab.url
 			, title: tab.title
-			, favicon: tab.favicon
+			, favicon: tab.favIconUrl
+			, user: token[0]
+			, name: token[1]
+			, pass: token[2]
 		})
 	};
 
 	fetch(fetchUrl, fetchOpts).then(function (res) {
-		// create popup message
-		var title = tab.title || 'unknown title';
-
-		if (!res.ok) {
-			text = getMessage('save_failed_message', [title]);
+		try {
+			return res.json();
+		} catch(e) {
+			// console.debug(e);
+		}
+		return null;
+	}).then(function (json) {
+		if (!json) {
+			text = getMessage('save_invalid_json_message');
 			setMessage(popup_id, text);
 			return;
 		}
 
+		if (!json.ok) {
+			text = getMessage('save_failed_message', [json.message]);
+			setMessage(popup_id, text);
+			return;
+		}
+
+		// create popup message
+		var title = tab.title || 'unknown title';
 		text = getMessage('save_success_message', [title]);
+		setMessage(popup_id, text);
+	}).catch(function () {
+		text = getMessage('save_server_down_message');
 		setMessage(popup_id, text);
 	});
 };
@@ -76,8 +110,15 @@ function share() {
 	var text = getMessage('save_progress_message');
 	setMessage(popup_id, text);
 
-	chrome.tabs.query({ active: true, lastFocusedWindow: true }, function (tabs) {
-		sharePage(tabs);
+	chrome.tabs.query({
+		active: true
+		, lastFocusedWindow: true
+	}, function (tabs) {
+		chrome.storage.sync.get({
+			token: ''
+		}, function (items) {
+			sharePage(tabs, items);
+		});
 	});
 };
 

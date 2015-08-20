@@ -10,12 +10,12 @@
     }
   },
   "save_failed_message": {
-    "message": "Failed to save this page. You can report it to @bitinn on twitter.",
+    "message": "Failed to save this page: $REASON$",
     "description": "after the user has failed to save a page",
     "placeholders": {
-      "page": {
+      "reason": {
         "content": "$1",
-        "example": "a page title"
+        "example": "failure reason"
       }
     }
   },
@@ -26,6 +26,22 @@
   "save_abort_message": {
     "message": "Only http(s) url are supported.",
     "description": "certain pages are not allowed"
+  },
+  "save_settings_message": {
+    "message": "You need to setup app token in extension's options menu first.",
+    "description": "app token is needed for extension to work"
+  },
+  "save_invalid_token_message": {
+    "message": "App token is invalid.",
+    "description": "app token is not valid"
+  },
+  "save_server_down_message": {
+    "message": "Remote server appear to be down.",
+    "description": "for when server is down"
+  },
+  "save_invalid_json_message": {
+    "message": "Remote server returned invalid json. You can report it to @bitinn on twitter.",
+    "description": "for when server is returning non-json response, usually means server error"
   },
   "options_token": {
     "message": "App Token",
