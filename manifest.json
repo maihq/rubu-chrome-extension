@@ -12,7 +12,7 @@
   "default_locale": "en",
   "browser_action": {
     "default_icon": "icons/icon19.png",
-    "default_title": "browser action demo",
+    "default_title": "__MSG_app_title__",
     "default_popup": "src/browser_action/browser_action.html"
   },
   "options_ui": {
