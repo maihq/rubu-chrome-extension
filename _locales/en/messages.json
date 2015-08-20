@@ -27,6 +27,18 @@
     "message": "Only http(s) url are supported.",
     "description": "certain pages are not allowed"
   },
+  "options_token": {
+    "message": "App Token",
+    "description": "label for app token"
+  },
+  "options_save": {
+    "message": "Save",
+    "description": "text for save button"
+  },
+  "options_message": {
+    "message": "Token saved",
+    "description": "message for saving app token"
+  },
   "app_title": {
     "message": "Save to rubu.me",
     "description": "app title"

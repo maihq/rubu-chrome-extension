@@ -1,0 +1,14 @@
+
+body {
+	margin: 0;
+	font-family: sans-serif;
+}
+
+.app-form {
+	padding: 1em;
+}
+
+.app-form label, .app-form input {
+	display: block;
+	margin: 0 0 1em;
+}
