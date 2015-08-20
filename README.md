@@ -2,7 +2,11 @@
 rubu-chrome-extension
 =====================
 
-A chrome extension for [rubu.me](https://rubu.me/) (WIP)
+A chrome extension for [rubu.me](https://rubu.me/)
+
+# Version
+
+v0.0.1
 
 # License
 
