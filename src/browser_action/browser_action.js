@@ -1,6 +1,6 @@
 
 var doc = document;
-var base_url = 'https://mai.dev';
+var base_url = 'https://rubu.me';
 var api_prefix = '/api/v1';
 var api_route = '/stash/extension'
 var popup_id = 'share-popup-message';
