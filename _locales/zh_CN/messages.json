@@ -1,6 +1,66 @@
 {
-  "share_message": {
-    "message": "成功分享页面",
-    "description": "成功分享页面时的描述"
+  "save_success_message": {
+    "message": "收藏页面：$PAGE$",
+    "description": "after the user has saved a page successfully",
+    "placeholders": {
+      "page": {
+        "content": "$1",
+        "example": "a page title"
+      }
+    }
+  },
+  "save_failed_message": {
+    "message": "收藏失败：$REASON$",
+    "description": "after the user has failed to save a page",
+    "placeholders": {
+      "reason": {
+        "content": "$1",
+        "example": "failure reason"
+      }
+    }
+  },
+  "save_progress_message": {
+    "message": "正在收藏页面……",
+    "description": "while the user is saving a page"
+  },
+  "save_abort_message": {
+    "message": "仅支持 http(s) 打头的页面。",
+    "description": "certain pages are not allowed"
+  },
+  "save_settings_message": {
+    "message": "你需要先到插件的设置页面添加App密码。",
+    "description": "app token is needed for extension to work"
+  },
+  "save_invalid_token_message": {
+    "message": "App密码格式不正确。",
+    "description": "app token is not valid"
+  },
+  "save_server_down_message": {
+    "message": "远程服务器无响应。",
+    "description": "for when server is down"
+  },
+  "save_invalid_json_message": {
+    "message": "远程服务器返回了错误的数据。",
+    "description": "for when server is returning non-json response, usually means server error"
+  },
+  "options_token": {
+    "message": "App密码",
+    "description": "label for app token"
+  },
+  "options_save": {
+    "message": "保存",
+    "description": "text for save button"
+  },
+  "options_message": {
+    "message": "密码已保存",
+    "description": "message for saving app token"
+  },
+  "app_title": {
+    "message": "收藏到rubu.me",
+    "description": "app title"
+  },
+  "app_description": {
+    "message": "收藏当前页面至rubu.me，可作为书签或分享列表。",
+    "description": "app description"
   }
 }
