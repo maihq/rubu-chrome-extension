@@ -1,33 +1,78 @@
 
+'use strict';
+
 var doc = document;
 var base_url = 'https://mai.dev';
 var api_prefix = '/api/v1';
 var refresh_route = '/refresh';
 var stash_route = '/stash';
-var popup_id = 'share-popup-message';
+var popup_id = 'app-popup-message';
+var app_data_key = 'app-data';
+var app_token_key = 'app-token';
 
+/**
+ * Store structure
+ *
+ * @param   String  data   App data
+ * @param   String  token  App token
+ * @return  Object
+ */
+function getAppStore (data, token) {
+	var store = {};
+	store[app_data_key] = data || '';
+	store[app_token_key] = token || '';
+
+	return store;
+};
+
+/**
+ * DOM helper, clear child elements from a container node
+ *
+ * @param   String  id  Container id
+ * @return  Void
+ */
 function clearPopup (id) {
 	var container = doc.getElementById(id);
 	while (container.firstChild) {
 		container.removeChild(container.firstChild);
 	}
-}
-
-function setMessage (id, msg) {
-	// clean up popup first
-	clearPopup(id);
-
-	// update popup
-	msg = msg || 'unknown message';
-	msg = doc.createTextNode(msg);
-	doc.getElementById(id).appendChild(msg);
 };
 
+/**
+ * DOM helper, set text node inside a container node
+ *
+ * @param   String  id   Container id
+ * @param   String  msg  Text node content
+ * @return  Void
+ */
+function setMessage (id, msg) {
+	clearPopup(id);
+
+	msg = msg || 'unknown message';
+	var text = doc.createTextNode(msg);
+
+	doc.getElementById(id).appendChild(text);
+};
+
+/**
+ * Locale helper, load localized message
+ *
+ * @param   String  name  Message name
+ * @param   Array   data  Message data
+ * @return  String
+ */
 function getMessage (name, data) {
 	data = data || [];
 	return chrome.i18n.getMessage(name, data);
 };
 
+/**
+ * Handle page share event
+ *
+ * @param   Array   tabs   A list of tabs
+ * @param   Object  items  Store data
+ * @return  Void
+ */
 function sharePage (tabs, items) {
 	// must have an active tab
 	if (tabs.length === 0) {
@@ -37,30 +82,24 @@ function sharePage (tabs, items) {
 	var tab = tabs[0];
 	var text;
 
-	// active tab must contains valid url
+	// must have a valid url
 	if (!tab || !tab.url || tab.url.indexOf('http') !== 0) {
 		text = getMessage('save_abort_message');
 		setMessage(popup_id, text);
 		return;
 	}
 
-	// app password should be valid
-	if (!items.app_data) {
+	// app data must exists
+	if (!items[app_data_key]) {
 		text = getMessage('save_settings_message');
 		setMessage(popup_id, text);
 		return;
 	}
 
-	var app_data = items.app_data || '';
-	var app_token = items.app_token || '';
-
-	if (app_data.split(':').length !== 2) {
-		text = getMessage('save_invalid_token_message');
-		setMessage(popup_id, text);
-		return;
-	}
-
 	// prepare fetch request
+	var app_data = items[app_data_key] || '';
+	var app_token = items[app_token_key] || '';
+
 	var stashUrl = base_url + api_prefix + stash_route;
 	var refreshUrl = base_url + api_prefix + refresh_route;
 
@@ -88,48 +127,61 @@ function sharePage (tabs, items) {
 		})
 	};
 
+	// send request
 	fetch(stashUrl, stashOpts).then(function (res) {
 		var json;
 		try {
 			json = res.json();
 		} catch(e) {
-			// console.debug(e);
+			//console.debug(e);
 		}
 
+		// invalid json
 		if (!json) {
 			text = getMessage('save_invalid_json_message');
 			setMessage(popup_id, text);
 			return;
 		}
 
+		// error response
 		if (!json.ok) {
 			text = getMessage('save_failed_message', [json.message]);
 			setMessage(popup_id, text);
 			return;
 		}
 
-		// create popup message
+		// update message
 		var title = tab.title || tab.url;
 		text = getMessage('save_success_message', [title]);
 		setMessage(popup_id, text);
+
 	}).catch(function () {
+		// handle network error
 		text = getMessage('save_server_down_message');
 		setMessage(popup_id, text);
 	});
 };
 
+/**
+ * Init share popup
+ *
+ * @return  Void
+ */
 function share() {
+	// i18n
 	var text = getMessage('save_progress_message');
 	setMessage(popup_id, text);
 
-	chrome.tabs.query({
+	// prepare store and query
+	var store = getAppStore();
+	var query = {
 		active: true
 		, lastFocusedWindow: true
-	}, function (tabs) {
-		chrome.storage.sync.get({
-			app_data: ''
-			, app_token: ''
-		}, function (items) {
+	};
+
+	// get tabs and store data
+	chrome.tabs.query(query, function (tabs) {
+		chrome.storage.sync.get(store, function (items) {
 			sharePage(tabs, items);
 		});
 	});

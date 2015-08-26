@@ -1,19 +1,18 @@
 
 body {
 	margin: 0;
-	font-family: sans-serif;
+	font-family: "Avenir Next", "Segoe UI", "Roboto", sans-serif;
 }
 
-#share-popup {
+.app-popup {
 	width: 200px;
 	height: auto;
-	padding: 10px;
 	overflow: hidden;
 	box-sizing: border-box;
+	padding: 1em;
 }
 
-#share-popup p {
-	margin: 0;
+.app-popup div {
 	font-size: 0.875rem;
 	line-height: 1.5em;
 }
