@@ -163,8 +163,13 @@ function sharePage (tabs, items, retry) {
 
 		// error response
 		if (!json.ok) {
+			// invalid token
+			if (json.code === 403) {
+				chrome.storage.sync.remove(app_token_key);
+			}
+
 			// missing token, let's refresh it
-			if (json.data && json.data.token) {
+			if (json.code === 400 && json.data && json.data.token) {
 				return fetch(refreshUrl, refreshOpts).then(function (res) {
 					return parseJson(res);
 				}).then(function (json) {
@@ -184,8 +189,7 @@ function sharePage (tabs, items, retry) {
 				});
 			}
 
-			// other error, reset token, show failure message
-			chrome.storage.sync.remove(app_token_key);
+			// show failure message
 			text = getMessage('save_failed_message', [json.message]);
 			setMessage(popup_id, text);
 			return;
