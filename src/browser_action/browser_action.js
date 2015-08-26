@@ -1,8 +1,9 @@
 
 var doc = document;
-var base_url = 'https://rubu.me';
+var base_url = 'https://mai.dev';
 var api_prefix = '/api/v1';
-var api_route = '/stash/extension'
+var refresh_route = '/refresh';
+var stash_route = '/stash';
 var popup_id = 'share-popup-message';
 
 function clearPopup (id) {
@@ -36,31 +37,34 @@ function sharePage (tabs, items) {
 	var tab = tabs[0];
 	var text;
 
-	// active tab must contain url
+	// active tab must contains valid url
 	if (!tab || !tab.url || tab.url.indexOf('http') !== 0) {
 		text = getMessage('save_abort_message');
 		setMessage(popup_id, text);
 		return;
 	}
 
-	// user data
-	if (!items.token) {
+	// app password should be valid
+	if (!items.app_data) {
 		text = getMessage('save_settings_message');
 		setMessage(popup_id, text);
 		return;
 	}
 
-	var token = items.token.split(':');
+	var app_data = items.app_data || '';
+	var app_token = items.app_token || '';
 
-	if (token.length !== 3) {
+	if (app_data.split(':').length !== 2) {
 		text = getMessage('save_invalid_token_message');
 		setMessage(popup_id, text);
 		return;
 	}
 
 	// prepare fetch request
-	var fetchUrl = base_url + api_prefix + api_route;
-	var fetchOpts = {
+	var stashUrl = base_url + api_prefix + stash_route;
+	var refreshUrl = base_url + api_prefix + refresh_route;
+
+	var stashOpts = {
 		method: 'POST'
 		, headers: {
 			'Accept': 'application/json'
@@ -70,20 +74,28 @@ function sharePage (tabs, items) {
 			url: tab.url
 			, title: tab.title
 			, favicon: tab.favIconUrl
-			, user: token[0]
-			, name: token[1]
-			, pass: token[2]
+			, token: app_token
+		})
+	};
+	var refreshOpts = {
+		method: 'POST'
+		, headers: {
+			'Accept': 'application/json'
+			, 'Content-Type': 'application/json'
+		}
+		, body: JSON.stringify({
+			password: app_data
 		})
 	};
 
-	fetch(fetchUrl, fetchOpts).then(function (res) {
+	fetch(stashUrl, stashOpts).then(function (res) {
+		var json;
 		try {
-			return res.json();
+			json = res.json();
 		} catch(e) {
 			// console.debug(e);
 		}
-		return null;
-	}).then(function (json) {
+
 		if (!json) {
 			text = getMessage('save_invalid_json_message');
 			setMessage(popup_id, text);
@@ -97,7 +109,7 @@ function sharePage (tabs, items) {
 		}
 
 		// create popup message
-		var title = tab.title || 'unknown title';
+		var title = tab.title || tab.url;
 		text = getMessage('save_success_message', [title]);
 		setMessage(popup_id, text);
 	}).catch(function () {
@@ -115,7 +127,8 @@ function share() {
 		, lastFocusedWindow: true
 	}, function (tabs) {
 		chrome.storage.sync.get({
-			token: ''
+			app_data: ''
+			, app_token: ''
 		}, function (items) {
 			sharePage(tabs, items);
 		});

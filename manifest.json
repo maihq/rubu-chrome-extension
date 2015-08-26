@@ -22,6 +22,6 @@
   "permissions": [
     "activeTab",
     "storage",
-    "https://rubu.me/"
+    "https://mai.dev/"
   ]
 }

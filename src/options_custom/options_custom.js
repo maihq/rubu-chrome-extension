@@ -1,9 +1,9 @@
 
 var doc = document;
 var form_id = 'app-form';
-var form_label_id = 'app-token-label';
-var form_button_id = 'app-token-button';
-var form_input_id = 'app-token';
+var form_label_id = 'app-data-label';
+var form_button_id = 'app-data-button';
+var form_input_id = 'app-data';
 var form_status_id = 'app-form-status';
 
 function clearPopup (id) {
@@ -27,12 +27,12 @@ function getMessage (name, data) {
 };
 
 function setInput (value) {
-	doc.getElementById(form_input_id).value = value;
+	doc.getElementById(form_input_id).value = value || '';
 };
 
 function restoreOptions () {
 	chrome.storage.sync.get({
-		token: ''
+		'app-data': ''
 	}, function (items) {
 		setInput(items.token);
 	});
@@ -42,9 +42,10 @@ function saveOptions (ev) {
 	ev.preventDefault();
 
 	var input = doc.getElementById(form_input_id);
+	console.log(input.value);
 
 	chrome.storage.sync.set({
-		token: input.value
+		'app-data': input.value
 	}, function () {
 		setMessage(form_status_id, getMessage('options_message'));
 	});
