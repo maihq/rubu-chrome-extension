@@ -1,14 +1,14 @@
 
 body {
 	margin: 0;
-	font-family: sans-serif;
+	font-family: "Avenir Next", "Segoe UI", "Roboto", sans-serif;
 }
 
 .app-form {
 	padding: 1em;
 }
 
-.app-form label, .app-form input {
+.app-form label, .app-form input, .app-form button {
 	display: block;
 	margin: 0 0 1em;
 }

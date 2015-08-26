@@ -1,33 +1,102 @@
 
+'use strict';
+
 var doc = document;
 var base_url = 'https://rubu.me';
 var api_prefix = '/api/v1';
-var api_route = '/stash/extension'
-var popup_id = 'share-popup-message';
+var refresh_route = '/refresh';
+var stash_route = '/stash';
+var popup_id = 'app-popup-message';
+var app_data_key = 'app-data';
+var app_token_key = 'app-token';
 
+/**
+ * Store structure
+ *
+ * @param   String  data   App data
+ * @param   String  token  App token
+ * @return  Object
+ */
+function getAppStore (data, token) {
+	var store = {};
+	store[app_data_key] = data || '';
+	store[app_token_key] = token || '';
+
+	return store;
+};
+
+/**
+ * DOM helper, clear child elements from a container node
+ *
+ * @param   String  id  Container id
+ * @return  Void
+ */
 function clearPopup (id) {
 	var container = doc.getElementById(id);
 	while (container.firstChild) {
 		container.removeChild(container.firstChild);
 	}
-}
-
-function setMessage (id, msg) {
-	// clean up popup first
-	clearPopup(id);
-
-	// update popup
-	msg = msg || 'unknown message';
-	msg = doc.createTextNode(msg);
-	doc.getElementById(id).appendChild(msg);
 };
 
+/**
+ * DOM helper, set text node inside a container node
+ *
+ * @param   String  id   Container id
+ * @param   String  msg  Text node content
+ * @return  Void
+ */
+function setMessage (id, msg) {
+	clearPopup(id);
+
+	msg = msg || 'unknown message';
+	var text = doc.createTextNode(msg);
+
+	doc.getElementById(id).appendChild(text);
+};
+
+/**
+ * Locale helper, load localized message
+ *
+ * @param   String  name  Message name
+ * @param   Array   data  Message data
+ * @return  String
+ */
 function getMessage (name, data) {
 	data = data || [];
 	return chrome.i18n.getMessage(name, data);
 };
 
-function sharePage (tabs, items) {
+/**
+ * JSON response parser
+ *
+ * @param   Object  res  Fetch response
+ * @return  Mixed
+ */
+function parseJson (res) {
+	var json = null;
+	try {
+		json = res.json();
+	} catch(e) {
+		//console.debug(e);
+	}
+
+	return json;
+};
+
+/**
+ * Handle page share event
+ *
+ * @param   Array   tabs   A list of tabs
+ * @param   Object  items  Store data
+ * @param   Number  retry  Number of retry
+ * @return  Void
+ */
+function sharePage (tabs, items, retry) {
+	// retry over limit
+	if (retry > 1) {
+		return;
+	}
+
 	// must have an active tab
 	if (tabs.length === 0) {
 		return;
@@ -36,31 +105,28 @@ function sharePage (tabs, items) {
 	var tab = tabs[0];
 	var text;
 
-	// active tab must contain url
+	// must have a valid url
 	if (!tab || !tab.url || tab.url.indexOf('http') !== 0) {
 		text = getMessage('save_abort_message');
 		setMessage(popup_id, text);
 		return;
 	}
 
-	// user data
-	if (!items.token) {
+	// app data must exists
+	if (!items[app_data_key]) {
 		text = getMessage('save_settings_message');
 		setMessage(popup_id, text);
 		return;
 	}
 
-	var token = items.token.split(':');
-
-	if (token.length !== 3) {
-		text = getMessage('save_invalid_token_message');
-		setMessage(popup_id, text);
-		return;
-	}
-
 	// prepare fetch request
-	var fetchUrl = base_url + api_prefix + api_route;
-	var fetchOpts = {
+	var app_data = items[app_data_key] || '';
+	var app_token = items[app_token_key] || '';
+
+	var stashUrl = base_url + api_prefix + stash_route;
+	var refreshUrl = base_url + api_prefix + refresh_route;
+
+	var stashOpts = {
 		method: 'POST'
 		, headers: {
 			'Accept': 'application/json'
@@ -70,54 +136,98 @@ function sharePage (tabs, items) {
 			url: tab.url
 			, title: tab.title
 			, favicon: tab.favIconUrl
-			, user: token[0]
-			, name: token[1]
-			, pass: token[2]
+			, token: app_token
+		})
+	};
+	var refreshOpts = {
+		method: 'POST'
+		, headers: {
+			'Accept': 'application/json'
+			, 'Content-Type': 'application/json'
+		}
+		, body: JSON.stringify({
+			password: app_data
 		})
 	};
 
-	fetch(fetchUrl, fetchOpts).then(function (res) {
-		try {
-			return res.json();
-		} catch(e) {
-			// console.debug(e);
-		}
-		return null;
+	// send request
+	fetch(stashUrl, stashOpts).then(function (res) {
+		return parseJson(res);
 	}).then(function (json) {
+		// invalid json
 		if (!json) {
 			text = getMessage('save_invalid_json_message');
 			setMessage(popup_id, text);
 			return;
 		}
 
+		// error response
 		if (!json.ok) {
+			// invalid token
+			if (json.code === 403) {
+				chrome.storage.sync.remove(app_token_key);
+			}
+
+			// missing token, let's refresh it
+			if (json.code === 400 && json.data && json.data.token) {
+				return fetch(refreshUrl, refreshOpts).then(function (res) {
+					return parseJson(res);
+				}).then(function (json) {
+					if (!json || !json.ok) {
+						return;
+					}
+
+					// update token and retry
+					var token = json.data.user + ':' + json.data.app + ':' + json.data.token;
+					var store = {};
+					store[app_token_key] = token;
+
+					chrome.storage.sync.set(store, function () {
+						items[app_token_key] = token;
+						sharePage(tabs, items, retry + 1);
+					});
+				});
+			}
+
+			// show failure message
 			text = getMessage('save_failed_message', [json.message]);
 			setMessage(popup_id, text);
 			return;
 		}
 
-		// create popup message
-		var title = tab.title || 'unknown title';
+		// show success message
+		var title = tab.title || tab.url;
 		text = getMessage('save_success_message', [title]);
 		setMessage(popup_id, text);
+
 	}).catch(function () {
+		// handle network error
 		text = getMessage('save_server_down_message');
 		setMessage(popup_id, text);
 	});
 };
 
+/**
+ * Init share popup
+ *
+ * @return  Void
+ */
 function share() {
+	// i18n
 	var text = getMessage('save_progress_message');
 	setMessage(popup_id, text);
 
-	chrome.tabs.query({
+	// prepare store and query
+	var store = getAppStore();
+	var query = {
 		active: true
 		, lastFocusedWindow: true
-	}, function (tabs) {
-		chrome.storage.sync.get({
-			token: ''
-		}, function (items) {
-			sharePage(tabs, items);
+	};
+
+	// get tabs and store data
+	chrome.tabs.query(query, function (tabs) {
+		chrome.storage.sync.get(store, function (items) {
+			sharePage(tabs, items, 0);
 		});
 	});
 };
