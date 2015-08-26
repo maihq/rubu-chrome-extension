@@ -67,13 +67,36 @@ function getMessage (name, data) {
 };
 
 /**
+ * JSON response parser
+ *
+ * @param   Object  res  Fetch response
+ * @return  Mixed
+ */
+function parseJson (res) {
+	var json = null;
+	try {
+		json = res.json();
+	} catch(e) {
+		//console.debug(e);
+	}
+
+	return json;
+};
+
+/**
  * Handle page share event
  *
  * @param   Array   tabs   A list of tabs
  * @param   Object  items  Store data
+ * @param   Number  retry  Number of retry
  * @return  Void
  */
-function sharePage (tabs, items) {
+function sharePage (tabs, items, retry) {
+	// retry over limit
+	if (retry > 1) {
+		return;
+	}
+
 	// must have an active tab
 	if (tabs.length === 0) {
 		return;
@@ -129,13 +152,8 @@ function sharePage (tabs, items) {
 
 	// send request
 	fetch(stashUrl, stashOpts).then(function (res) {
-		var json;
-		try {
-			json = res.json();
-		} catch(e) {
-			//console.debug(e);
-		}
-
+		return parseJson(res);
+	}).then(function (json) {
 		// invalid json
 		if (!json) {
 			text = getMessage('save_invalid_json_message');
@@ -145,12 +163,35 @@ function sharePage (tabs, items) {
 
 		// error response
 		if (!json.ok) {
+			// missing token, let's refresh it
+			if (json.data && json.data.token) {
+				return fetch(refreshUrl, refreshOpts).then(function (res) {
+					return parseJson(res);
+				}).then(function (json) {
+					if (!json || !json.ok) {
+						return;
+					}
+
+					// update token and retry
+					var token = json.data.user + ':' + json.data.app + ':' + json.data.token;
+					var store = {};
+					store[app_token_key] = token;
+
+					chrome.storage.sync.set(store, function () {
+						items[app_token_key] = token;
+						sharePage(tabs, items, retry + 1);
+					});
+				});
+			}
+
+			// other error, reset token, show failure message
+			chrome.storage.sync.remove(app_token_key);
 			text = getMessage('save_failed_message', [json.message]);
 			setMessage(popup_id, text);
 			return;
 		}
 
-		// update message
+		// show success message
 		var title = tab.title || tab.url;
 		text = getMessage('save_success_message', [title]);
 		setMessage(popup_id, text);
@@ -182,7 +223,7 @@ function share() {
 	// get tabs and store data
 	chrome.tabs.query(query, function (tabs) {
 		chrome.storage.sync.get(store, function (items) {
-			sharePage(tabs, items);
+			sharePage(tabs, items, 0);
 		});
 	});
 };
