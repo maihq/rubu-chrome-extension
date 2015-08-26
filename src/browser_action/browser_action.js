@@ -2,7 +2,7 @@
 'use strict';
 
 var doc = document;
-var base_url = 'https://mai.dev';
+var base_url = 'https://rubu.me';
 var api_prefix = '/api/v1';
 var refresh_route = '/refresh';
 var stash_route = '/stash';
