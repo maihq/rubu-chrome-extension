@@ -13,7 +13,7 @@ A chrome extension for [rubu.me](https://rubu.me/)
 
 # Version
 
-v1.0.0 (see changelog)
+v1.0.1 (see changelog)
 
 # License
 
@@ -22,3 +22,7 @@ MIT
 # Repo
 
 https://github.com/maihq/rubu-chrome-extension
+
+# Chrome web store
+
+https://chrome.google.com/webstore/detail/save-to-rubume/pbpckgippklddpebnlaofkblekemjnii
