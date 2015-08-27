@@ -94,6 +94,8 @@ function parseJson (res) {
 function sharePage (tabs, items, retry) {
 	// retry over limit
 	if (retry > 1) {
+		text = getMessage('save_invalid_token_message');
+		setMessage(popup_id, text);
 		return;
 	}
 
@@ -163,17 +165,25 @@ function sharePage (tabs, items, retry) {
 
 		// error response
 		if (!json.ok) {
-			// invalid token
-			if (json.code === 403) {
+			// missing token or invalid token, let's refresh it
+			if ((json.code === 400 && json.data && json.data.token) || json.code === 403) {
 				chrome.storage.sync.remove(app_token_key);
-			}
 
-			// missing token, let's refresh it
-			if (json.code === 400 && json.data && json.data.token) {
+				// TODO: refactor
 				return fetch(refreshUrl, refreshOpts).then(function (res) {
 					return parseJson(res);
 				}).then(function (json) {
-					if (!json || !json.ok) {
+					// invalid json
+					if (!json) {
+						text = getMessage('save_invalid_json_message');
+						setMessage(popup_id, text);
+						return;
+					}
+
+					// show failure message
+					if (!json.ok) {
+						text = getMessage('save_failed_message', [json.message]);
+						setMessage(popup_id, text);
 						return;
 					}
 
@@ -225,11 +235,13 @@ function share() {
 	};
 
 	// get tabs and store data
-	chrome.tabs.query(query, function (tabs) {
-		chrome.storage.sync.get(store, function (items) {
-			sharePage(tabs, items, 0);
+	setTimeout(function () {
+		chrome.tabs.query(query, function (tabs) {
+			chrome.storage.sync.get(store, function (items) {
+				sharePage(tabs, items, 0);
+			});
 		});
-	});
+	}, 10);
 };
 
 doc.addEventListener('DOMContentLoaded', share);
